@@ -8,7 +8,8 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath "io.spring.gradle:dependency-management-plugin:${dependencyManagementVersion}"
+        classpath("io.spring.gradle:dependency-management-plugin:${dependencyManagementVersion}")
+        classpath("se.transmode.gradle:gradle-docker:1.2")
     }
 }
 
@@ -29,6 +30,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'war'
 apply plugin: 'jacoco'
+apply plugin: 'docker'
 
 group = 'com.apps'
 version = '1.0.0-SNAPSHOT'
@@ -65,5 +67,23 @@ task wrapper(type: Wrapper) {
         File wrapperBatFile = file("gradlew.bat")
         wrapperBatFile.text = wrapperBatFile.text.replace("set DEFAULT_JVM_OPTS=",
                 "set GRADLE_OPTS=$gradleBatOpts %GRADLE_OPTS%\nset DEFAULT_JVM_OPTS=")
+    }
+}
+
+// docker
+docker {
+    baseImage "dashboard"
+    maintainer 'thanhtam.nguyen@pycogroup.com'
+}
+
+task buildDocker(type: Docker, dependsOn: build) {
+    push = false
+    applicationName = "dashboard"
+    dockerfile = file('src/main/docker/Dockerfile')
+    doFirst {
+        copy {
+            from war
+            into "$buildDir/docker"
+        }
     }
 }
