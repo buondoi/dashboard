@@ -1,0 +1,69 @@
+buildscript {
+    ext {
+        springBootVersion = '1.4.0.RELEASE'
+        dependencyManagementVersion = '0.6.0.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:${dependencyManagementVersion}"
+    }
+}
+
+ext {
+    spockVersion = '1.0-groovy-2.4'
+    groovyVersion = '2.4.4' // this version is compatible with spockVersion.
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'spring-boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'war'
+apply plugin: 'jacoco'
+
+group = 'com.pycogroup'
+version = '1.0-SNAPSHOT'
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.thymeleaf:thymeleaf-spring4")
+    compile("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
+
+    testCompile("org.spockframework:spock-core:$spockVersion") {
+        exclude group: 'org.codehaus.groovy'
+    }
+    testCompile("org.codehaus.groovy:groovy-all:$groovyVersion")
+    testCompile('org.hamcrest:hamcrest-core:1.3') // only necessary if Hamcrest matchers are used
+    testCompile('cglib:cglib-nodep:3.1') // used for spock framework to mock non-interface classes.
+    testCompile('org.objenesis:objenesis:2.1') // used when mocked class has non-default constructor
+}
+
+task wrapper(type: Wrapper) {
+    description = "Generates gradlew[.bat] scripts"
+    gradleVersion = '3.0'
+
+    doLast() {
+        def gradleOpts = "-XX:MaxMetaspaceSize=1024m -Xmx1024m"
+        def gradleBatOpts = "$gradleOpts -XX:MaxHeapSize=256m"
+        File wrapperFile = file("gradlew")
+        wrapperFile.text = wrapperFile.text.replace("DEFAULT_JVM_OPTS=",
+                "GRADLE_OPTS=\"$gradleOpts \$GRADLE_OPTS\"\nDEFAULT_JVM_OPTS=")
+        File wrapperBatFile = file("gradlew.bat")
+        wrapperBatFile.text = wrapperBatFile.text.replace("set DEFAULT_JVM_OPTS=",
+                "set GRADLE_OPTS=$gradleBatOpts %GRADLE_OPTS%\nset DEFAULT_JVM_OPTS=")
+    }
+}
