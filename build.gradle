@@ -51,7 +51,7 @@ dependencies {
     testCompile('cglib:cglib-nodep:3.1') // used for spock framework to mock non-interface classes.
     testCompile('org.objenesis:objenesis:2.1') // used when mocked class has non-default constructor
 }
-
+// this is comment
 task wrapper(type: Wrapper) {
     description = "Generates gradlew[.bat] scripts"
     gradleVersion = '3.0'
