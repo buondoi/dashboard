@@ -4,11 +4,14 @@ buildscript {
         dependencyManagementVersion = '0.6.0.RELEASE'
     }
     repositories {
+        mavenLocal()
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "io.spring.gradle:dependency-management-plugin:${dependencyManagementVersion}"
+        classpath("se.transmode.gradle:gradle-docker:1.2")
     }
 }
 
@@ -29,6 +32,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'war'
 apply plugin: 'jacoco'
+apply plugin: 'docker'
 
 group = 'com.apps'
 version = '1.0.0-SNAPSHOT'
@@ -51,7 +55,19 @@ dependencies {
     testCompile('cglib:cglib-nodep:3.1') // used for spock framework to mock non-interface classes.
     testCompile('org.objenesis:objenesis:2.1') // used when mocked class has non-default constructor
 }
-// this is comment
+
+docker {
+    baseImage = 'anapsix/alpine-java:8'
+    maintainer = 'thanhtam.nguyen@pycogroup.com'
+}
+
+task buildDocker(type: Docker, dependsOn: [tasks.war, tasks.bootRepackage]) {
+    def buildDir = project.buildDir.toPath()
+    addFile(buildDir.resolve('libs').toFile(), '/opt')
+    entryPoint(['java', '-jar', "/opt/${project.name}-${project.version}.war"])
+    applicationName = project.name
+}
+
 task wrapper(type: Wrapper) {
     description = "Generates gradlew[.bat] scripts"
     gradleVersion = '3.0'
